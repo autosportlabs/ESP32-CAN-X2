@@ -89,6 +89,6 @@ void broadcastGPSData() {
   if (twai_transmit(&message_speed_quality, pdMS_TO_TICKS(1000)) == ESP_OK) {
     Serial.println("CAN1: Speed and GPS quality data sent");
   } else {
-    Serial.println("CAN1: Failed to send Speed and GPS quality data");
-  }
+    Serial.println("CAN1: Failed to send Speed and GPS quality data");
+  }
 }
