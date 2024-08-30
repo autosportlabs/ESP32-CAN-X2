@@ -1,3 +1,29 @@
+/*
+  This code is for an ESP32-CAN-X2 microcontroller to read GPS data from a GPS module and transmit it over a CAN bus network.
+  - **TinyGPSPlus**: A library by Mikal Hart used to parse and decode NMEA sentences from GPS modules, providing easy access to location data such as latitude, longitude, speed, and quality indicators.
+  The code initializes a hardware serial connection for the GPS module and a CAN bus interface for broadcasting the parsed GPS data.
+
+  **Pin Configuration:**  
+    - Rx to GPS module (tx from ESP32) - pin 17 of SV1 - GPIO40 of ESP32
+    - Tx from GPS module (rx to ESP32) - pin 18 of SV1 - GPIO41 of ESP32
+    - P1PPS from GPS module            - pin 16 of SV1 - GPIO39 of ESP32
+    - PSE_SEL from GPS moduel          - pin 11 of SV1 - GPIO45 of ESP32
+
+  **Broadcasting the following information:**
+
+  - **CAN ID 100**:
+    - Latitude in signed decimal degrees. 4-byte payload (Multiply value by 1000000 to get 6 digits of precision, pack into 4 bytes)
+    - CAN byte offset 0-3
+    - Longitude in signed decimal degrees. 4-byte payload (Multiply value by 1000000 to get 6 digits of precision, pack into 4 bytes)
+    - CAN byte offset 4-7
+
+  - **CAN ID 101**:
+    - Speed in km/h. 2-byte payload (Multiply value by 100 to get 2 digits of precision, pack into two bytes)
+    - CAN byte offset 0-1
+    - GPS quality indicator. 1-byte payload (value is typically 0,1,2)
+    - CAN byte offset 2
+*/
+
 #include <Arduino.h>
 #include <SPI.h>
 #include "driver/twai.h"
