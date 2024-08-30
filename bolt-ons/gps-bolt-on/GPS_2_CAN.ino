@@ -1,20 +1,22 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "driver/twai.h"
-#include <SoftwareSerial.h>
 #include <TinyGPS++.h>
 
-// RX, TX pins connected to the GPS module
-SoftwareSerial gpsSerial(40, 41);  // Adjust these pins based on your wiring
+// Initialize TinyGPS++
 TinyGPSPlus gps;
 
 // CAN1 IDs for broadcasting GPS data
 #define CAN_ID_LAT_LNG 100
 #define CAN_ID_SPEED_QUALITY 101
 
+// Define CAN1 TX and RX pins
+#define CAN1_TX 7  // Adjust based on your setup
+#define CAN1_RX 6  // Adjust based on your setup
+
 void setup() {
   Serial.begin(9600);    // Initialize serial communication with the Serial Monitor
-  gpsSerial.begin(9600); // Initialize serial communication with the GPS module
+  Serial2.begin(9600, SERIAL_8N1, 40, 41); // Initialize serial communication with the GPS module using hardware Serial2
 
   Serial.println("GPS Module Initialized");
 
@@ -40,8 +42,8 @@ void setup() {
 }
 
 void loop() {
-  while (gpsSerial.available() > 0) {
-    char c = gpsSerial.read();
+  while (Serial2.available() > 0) {
+    char c = Serial2.read();
     gps.encode(c); // Parse the NMEA sentence
 
     if (gps.location.isUpdated()) {
