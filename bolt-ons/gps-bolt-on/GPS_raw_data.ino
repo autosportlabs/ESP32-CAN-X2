@@ -1,6 +1,6 @@
 void setup() {
   Serial.begin(115200);    // Initialize serial communication with the Serial Monitor
-  Serial1.begin(9600, SERIAL_8N1, 40, 41); // Initialize serial communication with the GPS module
+  Serial1.begin(9600, SERIAL_8N1, 41, 40); // Initialize serial communication with the GPS module
 }
 
 void loop() {

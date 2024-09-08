@@ -42,7 +42,7 @@ TinyGPSPlus gps;
 
 void setup() {
   Serial.begin(9600);    // Initialize serial communication with the Serial Monitor
-  Serial2.begin(9600, SERIAL_8N1, 40, 41); // Initialize serial communication with the GPS module using hardware Serial2
+  Serial2.begin(9600, SERIAL_8N1, 41, 40); // Initialize serial communication with the GPS module using hardware Serial2
 
   Serial.println("GPS Module Initialized");
 
