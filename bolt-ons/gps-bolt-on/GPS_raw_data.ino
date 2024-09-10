@@ -10,7 +10,6 @@ void loop() {
     char c = Serial1.read();  // Read a character from the GPS module 
     Serial.print(c);            // Print the character to the Serial Monitor (Raw Data)
   }
-  delay(10);
 }
 
 
