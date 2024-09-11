@@ -1,20 +1,32 @@
-#include <SoftwareSerial.h>
+/*
+  This code is for an ESP32-CAN-X2 microcontroller to read GPS data from a GPS module.
+  - **TinyGPSPlus**: A library by Mikal Hart used to parse and decode NMEA sentences from GPS modules, providing easy access to location data such as latitude, longitude, speed, and quality indicators.
+  The code initializes a hardware serial connection for the GPS module and parse GPS data.
+
+  **Pin Configuration:**  
+    - Rx to GPS module (tx from ESP32) - pin 17 of SV1 - GPIO40 of ESP32
+    - Tx from GPS module (rx to ESP32) - pin 18 of SV1 - GPIO41 of ESP32
+    - P1PPS from GPS module            - pin 16 of SV1 - GPIO39 of ESP32
+    - PSE_SEL from GPS moduel          - pin 11 of SV1 - GPIO45 of ESP32
+*/
+
 #include <TinyGPS++.h>
 
 // RX, TX pins connected to the GPS module
-SoftwareSerial gpsSerial(40, 41);  // Adjust these pins based on your wiring
+// Serial1 uses the hardware serial port and does not need pin assignment in code
 TinyGPSPlus gps;
 
 void setup() {
   Serial.begin(9600);    // Initialize serial communication with the Serial Monitor
-  gpsSerial.begin(9600); // Initialize serial communication with the GPS module
+  Serial1.begin(9600, SERIAL_8N1, 41, 40); // Initialize serial communication with the GPS module
+  // Note: Replace 41 and 40 with actual RX and TX pins if required by your hardware.
 
   Serial.println("GPS Module Initialized");
 }
 
 void loop() {
-  while (gpsSerial.available() > 0) {
-    char c = gpsSerial.read();
+  while (Serial1.available() > 0) {
+    char c = Serial1.read();
     
     gps.encode(c); // Parse the NMEA sentence
 
@@ -38,7 +50,6 @@ void printGPSData() {
   // HDOP (Horizontal Dilution of Precision)
   Serial.print("HDOP: ");
   Serial.println(gps.hdop.hdop()); // Corrected the function call for HDOP
-
 
   // Speed in km/h
   Serial.print("Speed: ");
