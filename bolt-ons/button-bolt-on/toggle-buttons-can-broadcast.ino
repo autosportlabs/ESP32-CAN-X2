@@ -1,3 +1,8 @@
+/*
+toggle-buttons-can-broadcast demo
+* toggles button states with LED status indicators
+* broadcasts the current button state on CAN bus
+*/
 #include "driver/twai.h"
 #define POLLING_RATE_MS 1000
 
@@ -30,8 +35,9 @@ struct ButtonState {
   bool led_state;     // Current LED state (on/off)
 };
 
-RGB pressed_color = {0, 127, 127};
-RGB released_color = {0, 0, 0};
+// configure the RGB colors of the active and inactive button states
+RGB active_color = {0, 127, 127};
+RGB inactive_color = {0, 0, 0};
 
 LiteLED myLED(LED_TYPE, 0); // Create the LiteLED object
 
@@ -54,8 +60,6 @@ void setup() {
     for (int i = 0; i < BUTTON_COUNT; i++) {
         pinMode(button_states[i].button_port, INPUT_PULLUP); // Configure buttons as input with pull-up resistors
     }
-
-
 
     Serial.println("Initializing builtin CAN peripheral");
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)CAN1_TX, (gpio_num_t)CAN1_RX, TWAI_MODE_NORMAL);
@@ -80,7 +84,6 @@ void setSwitchLEDs(int index, RGB color) {
     myLED.setPixel(index, pixel_color);
     myLED.setPixel(index + 1, pixel_color);
 }
-
 
 void sendCANButtonStates() {
     twai_message_t message;
@@ -116,9 +119,9 @@ void loop() {
 
         // Set the LED color based on the toggled state
         if (button_states[i].led_state) {
-            setSwitchLEDs(i * 2, pressed_color); // Turn LEDs on
+            setSwitchLEDs(i * 2, active_color); // Turn LEDs on
         } else {
-            setSwitchLEDs(i * 2, released_color); // Turn LEDs off
+            setSwitchLEDs(i * 2, inactive_color); // Turn LEDs off
         }
     }
     sendCANButtonStates();
@@ -126,3 +129,4 @@ void loop() {
     myLED.show(); // Update the LEDs
     delay(50);    // Debounce delay
 }
+
