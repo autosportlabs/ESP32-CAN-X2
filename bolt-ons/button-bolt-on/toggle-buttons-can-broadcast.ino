@@ -32,14 +32,18 @@ struct ButtonState {
   uint32_t button_port;
   bool pressed;       // Current button state
   bool last_pressed;  // Previous button state
-  bool led_state;     // Current LED state (on/off)
+  bool activated;     // Current LED state (on/off)
 };
 
-// configure the RGB colors of the active and inactive button states
-RGB active_color = {0, 127, 127};
+// configure the RGB colors of the active button states
+RGB button_active_colors[] = {
+  {0, 127, 127},
+  {0, 127, 0},
+  {127, 0, 127},
+  {127, 127, 127}
+};
+//there's only one inactive color
 RGB inactive_color = {0, 0, 0};
-
-LiteLED myLED(LED_TYPE, 0); // Create the LiteLED object
 
 ButtonState button_states[] = {
   {BUTTON_1, false, true, false},
@@ -47,6 +51,8 @@ ButtonState button_states[] = {
   {BUTTON_3, false, true, false},
   {BUTTON_4, false, true, false},
 };
+
+LiteLED myLED(LED_TYPE, 0); // Create the LiteLED object
 
 void setup() {
     // Uncomment to see serial debug output
@@ -92,7 +98,7 @@ void sendCANButtonStates() {
     message.rtr = 0;
     message.data_length_code = 4;
     for (int i = 0; i < BUTTON_COUNT; i++) {
-      message.data[i] = button_states[i].led_state;
+      message.data[i] = button_states[i].activated;
     }
 
     // Queue message for transmission
@@ -111,15 +117,15 @@ void loop() {
         // Detect a button press (edge detection: HIGH to LOW)
         if (!button_states[i].last_pressed && button_states[i].pressed) {
             // Toggle the LED state
-            button_states[i].led_state = !button_states[i].led_state;
+            button_states[i].activated = !button_states[i].activated;
         }
 
         // Update the last button state
         button_states[i].last_pressed = button_states[i].pressed;
 
         // Set the LED color based on the toggled state
-        if (button_states[i].led_state) {
-            setSwitchLEDs(i * 2, active_color); // Turn LEDs on
+        if (button_states[i].activated) {
+            setSwitchLEDs(i * 2, button_active_colors[i]); // Turn LEDs on
         } else {
             setSwitchLEDs(i * 2, inactive_color); // Turn LEDs off
         }
