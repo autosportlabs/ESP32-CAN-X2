@@ -1,88 +1,92 @@
-#include <Adafruit_NeoPixel.h>
+#include <LiteLED.h>
 #include <driver/twai.h> // For TWAI (CAN)
 
-#define LED_PIN 5          // WS2812B Data Pin
-#define NUM_LEDS 10        // Total number of LEDs
+#define LED_TYPE        LED_STRIP_WS2812
+
+#define LED_GPIO 5      // GPIO pin connected to the LED strip
+#define LED_BRIGHT 30   // LED brightness (0 = off, 255 = maximum brightness)
+#define LED_COUNT 10    // Number of LEDs in the strip
+
 #define CAN_TX_PIN GPIO_NUM_21 // CAN TX Pin (ESP32-S3)
 #define CAN_RX_PIN GPIO_NUM_20 // CAN RX Pin (ESP32-S3)
-#define CAN_LED_ID 0x101   // CAN ID for LED control
-#define CAN_ALERT_ID 0x102 // CAN ID for Left/Right alerts
+#define CAN_LED_ID 0x101       // CAN ID for individual LED control
+#define CAN_ALERT_ID 0x102     // CAN ID for array (left/right) control
 
-Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+LiteLED myLED(LED_TYPE, 0);    // Create the LiteLED object
 
-// Initialize the TWAI configuration
-void setupTWAI() {
+// Function to initialize the CAN bus
+void initCAN() {
+    // General CAN configuration
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
-    twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS();
-    twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
+    twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS(); // Set bitrate to 500 kbps
+    twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL(); // Accept all CAN messages
 
+    // Install CAN driver
     if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
-        Serial.println("TWAI driver installed successfully.");
+        Serial.println("TWAI driver installed successfully");
     } else {
-        Serial.println("Failed to install TWAI driver.");
+        Serial.println("Failed to install TWAI driver");
     }
 
+    // Start CAN driver
     if (twai_start() == ESP_OK) {
-        Serial.println("TWAI driver started successfully.");
+        Serial.println("TWAI driver started successfully");
     } else {
-        Serial.println("Failed to start TWAI driver.");
+        Serial.println("Failed to start TWAI driver");
     }
-}
-
-// Function to set a specific LED
-void setPixelColor(uint8_t index, uint8_t red, uint8_t green, uint8_t blue) {
-    if (index < NUM_LEDS) {
-        strip.setPixelColor(index, strip.Color(red, green, blue));
-        strip.show();
-    }
-}
-
-// Function to set left or right alert
-void setArrayColor(uint8_t arrayIndex, uint8_t red, uint8_t green, uint8_t blue) {
-    uint8_t start = (arrayIndex == 0) ? 0 : 5; // 0 for left, 1 for right
-    uint8_t end = start + 5;
-
-    for (uint8_t i = start; i < end; i++) {
-        strip.setPixelColor(i, strip.Color(red, green, blue));
-    }
-    strip.show();
 }
 
 void setup() {
-    Serial.begin(115200);
-    strip.begin();
-    strip.show(); // Initialize all LEDs to off
-    setupTWAI();
-    Serial.println("Setup complete.");
+    Serial.begin(115200); // Initialize Serial monitor for debugging
+
+    // Initialize the LED strip
+    myLED.begin(LED_GPIO, LED_COUNT); 
+    myLED.brightness(LED_BRIGHT); // Set LED brightness
+    myLED.fill(0x000000, 1);      // Turn off all LEDs initially
+
+    // Initialize the CAN bus
+    initCAN();
+}
+
+// Function to set the color of a specific LED
+void setLEDColor(uint8_t index, byte red, byte green, byte blue) {
+    uint32_t color = (red << 16) | (green << 8) | blue; // Convert RGB to a 32-bit color
+    myLED.setPixel(index, color); 
+    myLED.show(); 
+}
+
+// Function to set the color of an array (left or right) of LEDs
+void setArrayColor(uint8_t index, byte red, byte green, byte blue) {
+    uint32_t color = (red << 16) | (green << 8) | blue; // Convert RGB to a 32-bit color
+    uint8_t start = (index == 0) ? 0 : 5; // Determine start position based on index
+    uint8_t end = start + 5;             // Determine end position
+    for (uint8_t i = start; i < end; i++) {
+        myLED.setPixel(i, color); 
+    }
+    myLED.show();
 }
 
 void loop() {
-    // Check for incoming CAN messages
+    // Prepare a structure to hold incoming CAN messages
     twai_message_t rx_msg;
+
+    // Check for incoming CAN messages
     if (twai_receive(&rx_msg, pdMS_TO_TICKS(10)) == ESP_OK) {
         if (rx_msg.identifier == CAN_LED_ID && rx_msg.data_length_code == 4) {
-            // Set a specific LED
-            uint8_t index = rx_msg.data[0];
-            uint8_t red = rx_msg.data[1];
-            uint8_t green = rx_msg.data[2];
-            uint8_t blue = rx_msg.data[3];
-            setPixelColor(index, red, green, blue);
-        } else if (rx_msg.identifier == CAN_ALERT_ID && rx_msg.data_length_code == 4) {
-            // Set left or right array
+            // Set a specific LED's color
+            uint8_t ledIndex = rx_msg.data[0];
+            byte red = rx_msg.data[1];
+            byte green = rx_msg.data[2];
+            byte blue = rx_msg.data[3];
+            setLEDColor(ledIndex, red, green, blue);
+        } 
+        else if (rx_msg.identifier == CAN_ALERT_ID && rx_msg.data_length_code == 4) {
+            // Set the color of an LED array (left or right)
             uint8_t arrayIndex = rx_msg.data[0];
-            uint8_t red = rx_msg.data[1];
-            uint8_t green = rx_msg.data[2];
-            uint8_t blue = rx_msg.data[3];
+            byte red = rx_msg.data[1];
+            byte green = rx_msg.data[2];
+            byte blue = rx_msg.data[3];
             setArrayColor(arrayIndex, red, green, blue);
         }
     }
-
-    // Random color demo: Uncomment for testing
-    
-    // for (uint8_t i = 0; i < NUM_LEDS; i++) {
-    //     setPixelColor(i, random(0, 256), random(0, 256), random(0, 256));
-    //     setArrayColor(0, random(0, 256), random(0, 256), random(0, 256));    
-    //     delay(1000);
-    // }
-    
 }
