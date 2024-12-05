@@ -3,7 +3,7 @@
 
 #define LED_TYPE        LED_STRIP_WS2812
 
-#define LED_GPIO 5      // GPIO pin connected to the LED strip
+#define LED_GPIO 14     // GPIO pin connected to the LED strip
 #define LED_BRIGHT 30   // LED brightness (0 = off, 255 = maximum brightness)
 #define LED_COUNT 10    // Number of LEDs in the strip
 
