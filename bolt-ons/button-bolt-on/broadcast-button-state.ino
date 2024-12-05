@@ -16,7 +16,7 @@ bool buttonStates[4] = {0, 0, 0, 0}; // Stores the current state of each button
 
 // Initialize the TWAI configuration
 void setupTWAI() {
-    twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
+    twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)CAN1_TX, (gpio_num_t)CAN1_RX, TWAI_MODE_NORMAL);
     twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS();
     twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
@@ -77,7 +77,8 @@ void sendButtonEvent(uint8_t buttonId, bool state) {
 }
 
 void setup() {
-    Serial.begin(115200);
+    //Uncomment the below to see debug output
+    //Serial.begin(115200);
 
     // Configure button pins
     pinMode(BUTTON_1_PIN, INPUT_PULLUP);

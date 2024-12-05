@@ -1,8 +1,10 @@
 /*
 toggle-buttons-can-broadcast demo
+
 * toggles button states with LED status indicators
 * broadcasts the current button state on CAN bus
 */
+
 #include "driver/twai.h"
 #define POLLING_RATE_MS 1000
 
@@ -57,6 +59,7 @@ LiteLED myLED(LED_TYPE, 0); // Create the LiteLED object
 void setup() {
     // Uncomment to see serial debug output
     //Serial.begin(115200);
+
     Serial.println("Initializing LEDs");
     myLED.begin(LED_GPIO, LED_COUNT); // Initialize the LED object
     myLED.brightness(LED_BRIGHT);    // Set brightness
@@ -69,7 +72,7 @@ void setup() {
 
     Serial.println("Initializing builtin CAN peripheral");
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)CAN1_TX, (gpio_num_t)CAN1_RX, TWAI_MODE_NORMAL);
-    twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
+    twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS();
     twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
     if(twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
