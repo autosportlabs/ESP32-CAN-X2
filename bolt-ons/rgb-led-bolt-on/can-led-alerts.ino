@@ -17,9 +17,9 @@ LiteLED myLED(LED_TYPE, 0);    // Create the LiteLED object
 // Function to initialize the CAN bus
 void initCAN() {
     // General CAN configuration
-    twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
-    twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS(); // Set bitrate to 500 kbps
-    twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL(); // Accept all CAN messages
+    twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)CAN1_TX, (gpio_num_t)CAN1_RX, TWAI_MODE_NORMAL);
+    twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS();
+    twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
     // Install CAN driver
     if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
@@ -37,7 +37,8 @@ void initCAN() {
 }
 
 void setup() {
-    Serial.begin(115200); // Initialize Serial monitor for debugging
+    // Uncomment to see debug messages
+    //Serial.begin(115200); // Initialize Serial monitor for debugging
 
     // Initialize the LED strip
     myLED.begin(LED_GPIO, LED_COUNT); 
