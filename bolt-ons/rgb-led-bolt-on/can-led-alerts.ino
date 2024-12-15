@@ -1,18 +1,17 @@
-#include <LiteLED.h>
+#include <FastLED.h>
 #include <driver/twai.h> // For TWAI (CAN)
 
-#define LED_TYPE        LED_STRIP_WS2812
+#define LED_PIN        14       // GPIO pin connected to the LED strip
+#define LED_BRIGHTNESS 30       // LED brightness (0 = off, 255 = maximum brightness)
+#define LED_COUNT      10       // Number of LEDs in the strip
 
-#define LED_GPIO 14     // GPIO pin connected to the LED strip
-#define LED_BRIGHT 30   // LED brightness (0 = off, 255 = maximum brightness)
-#define LED_COUNT 10    // Number of LEDs in the strip
+// Define CAN1 TX and RX pins
+#define CAN1_TX 7  // Adjust based on your setup
+#define CAN1_RX 6  // Adjust based on your setup
+#define CAN_LED_ID 0x101        // CAN ID for individual LED control
+#define CAN_ALERT_ID 0x102      // CAN ID for array (left/right) control
 
-#define CAN_TX_PIN GPIO_NUM_21 // CAN TX Pin (ESP32-S3)
-#define CAN_RX_PIN GPIO_NUM_20 // CAN RX Pin (ESP32-S3)
-#define CAN_LED_ID 0x101       // CAN ID for individual LED control
-#define CAN_ALERT_ID 0x102     // CAN ID for array (left/right) control
-
-LiteLED myLED(LED_TYPE, 0);    // Create the LiteLED object
+CRGB leds[LED_COUNT];           // Array to hold the LED data
 
 // Function to initialize the CAN bus
 void initCAN() {
@@ -37,13 +36,13 @@ void initCAN() {
 }
 
 void setup() {
-    // Uncomment to see debug messages
-    //Serial.begin(115200); // Initialize Serial monitor for debugging
+    // Serial.begin(115200); // Initialize Serial monitor for debugging
 
     // Initialize the LED strip
-    myLED.begin(LED_GPIO, LED_COUNT); 
-    myLED.brightness(LED_BRIGHT); // Set LED brightness
-    myLED.fill(0x000000, 1);      // Turn off all LEDs initially
+    FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, LED_COUNT);
+    FastLED.setBrightness(LED_BRIGHTNESS);
+    fill_solid(leds, LED_COUNT, CRGB::Black); // Turn off all LEDs initially
+    FastLED.show();
 
     // Initialize the CAN bus
     initCAN();
@@ -51,20 +50,22 @@ void setup() {
 
 // Function to set the color of a specific LED
 void setLEDColor(uint8_t index, byte red, byte green, byte blue) {
-    uint32_t color = (red << 16) | (green << 8) | blue; // Convert RGB to a 32-bit color
-    myLED.setPixel(index, color); 
-    myLED.show(); 
+    if (index < LED_COUNT) { // Ensure the index is within bounds
+        leds[index] = CRGB(red, green, blue);
+        FastLED.show();
+    }
 }
 
 // Function to set the color of an array (left or right) of LEDs
 void setArrayColor(uint8_t index, byte red, byte green, byte blue) {
-    uint32_t color = (red << 16) | (green << 8) | blue; // Convert RGB to a 32-bit color
     uint8_t start = (index == 0) ? 0 : 5; // Determine start position based on index
     uint8_t end = start + 5;             // Determine end position
+    if (end > LED_COUNT) end = LED_COUNT; // Ensure we don't go out of bounds
+
     for (uint8_t i = start; i < end; i++) {
-        myLED.setPixel(i, color); 
+        leds[i] = CRGB(red, green, blue);
     }
-    myLED.show();
+    FastLED.show();
 }
 
 void loop() {
