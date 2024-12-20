@@ -1,10 +1,3 @@
-/*
-toggle-buttons-can-broadcast demo
-
-* toggles button states with LED status indicators
-* broadcasts the current button state on CAN bus
-*/
-
 #include "driver/twai.h"
 #include <FastLED.h>
 #include <Arduino.h>
@@ -31,23 +24,16 @@ struct ButtonState {
   bool activated;     // Current LED state (on/off)
 };
 
-// RGB structure
-struct RGB {
-  byte red;
-  byte green;
-  byte blue;
-};
-
 // Configure the RGB colors for active button states
-RGB button_active_colors[] = {
-  {0, 127, 127},
-  {0, 127, 0},
-  {127, 0, 127},
-  {127, 127, 127}
+CRGB button_active_colors[] = {
+  CRGB(0, 127, 127),
+  CRGB(0, 127, 0),
+  CRGB(127, 0, 127),
+  CRGB(127, 127, 127)
 };
 
 // Inactive LED color
-RGB inactive_color = {0, 0, 0};
+CRGB inactive_color = CRGB(0, 0, 0);
 
 // Button states
 ButtonState button_states[] = {
@@ -94,10 +80,10 @@ void setup() {
   }
 }
 
-void setSwitchLEDs(int index, RGB color) {
+void setSwitchLEDs(int index, CRGB color) {
   if (index < LED_COUNT - 1) { // Ensure index does not exceed LED array
-    leds[index] = CRGB(color.red, color.green, color.blue);
-    leds[index + 1] = CRGB(color.red, color.green, color.blue);
+    leds[index] = color;
+    leds[index + 1] = color;
   }
 }
 
@@ -133,7 +119,7 @@ void loop() {
     // Update the last button state
     button_states[i].last_pressed = button_states[i].pressed;
 
-    Set the LED color based on the toggled state
+    // Set the LED color based on the toggled state
     if (button_states[i].activated) {
       setSwitchLEDs(i * 2, button_active_colors[i]); // Turn LEDs on
     } else {
