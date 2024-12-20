@@ -8,18 +8,17 @@
 #define BUTTON_4_PIN 38
 
 // Define GPIO pins for CAN
-#define CAN_TX_PIN GPIO_NUM_21 // CAN TX Pin
-#define CAN_RX_PIN GPIO_NUM_20 // CAN RX Pin
 #define CAN_BUTTON_STATE_ID 0x200 // CAN ID for periodic button state messages
 #define CAN_BUTTON_EVENT_ID 0x201 // CAN ID for button event messages
 
-// Define WS2812 LED configuration
-#define NUM_LEDS 4          // Number of LEDs (one per button)
-#define LED_PIN 4           // GPIO pin for WS2812 data
-CRGB leds[NUM_LEDS];        // Array to store LED colors
+// Define WS2812 LED and Button configuration
+#define NUM_BUTTONS 4           // Number of buttons
+#define LED_PIN 14             // GPIO pin for WS2812 data
+#define NUM_LEDS (2 * NUM_BUTTONS)  // Number of LEDs (2 LEDs per button)
+CRGB leds[NUM_LEDS];          // Array to store LED colors
 
 // Button states
-bool buttonStates[NUM_LEDS] = {0, 0, 0, 0}; // Stores the current state of each button
+bool buttonStates[NUM_BUTTONS] = {0, 0, 0, 0}; // Stores the current state of each button
 
 // TWAI Configuration
 void setupTWAI() {
@@ -53,9 +52,9 @@ void sendButtonStates(const bool states[]) {
     twai_message_t tx_msg;
     tx_msg.identifier = CAN_BUTTON_STATE_ID;
     tx_msg.extd = 0;
-    tx_msg.data_length_code = NUM_LEDS;
+    tx_msg.data_length_code = NUM_BUTTONS;
 
-    for (int i = 0; i < NUM_LEDS; i++) {
+    for (int i = 0; i < NUM_BUTTONS; i++) {
         tx_msg.data[i] = states[i];
     }
 
@@ -85,18 +84,22 @@ void sendButtonEvent(uint8_t buttonId, bool state) {
 
 // Update LED colors based on button states
 void updateLEDs(const bool states[]) {
-    for (int i = 0; i < NUM_LEDS; i++) {
+    for (int i = 0; i < NUM_BUTTONS; i++) {
         if (states[i]) {
-            leds[i] = CRGB::Green; // Button pressed -> Green
-        } else {
-            leds[i] = CRGB::Red;   // Button not pressed -> Red
+            leds[i*2] = CRGB::Green; // Button pressed -> Green
+            leds[(i*2)+1] = CRGB::Green; // Button pressed -> Green
+        }
+        else{
+            leds[i*2] = CRGB::Black; // Button released -> Blank
+            leds[(i*2)+1] = CRGB::Black; // Button released -> Blank
         }
     }
     FastLED.show();
 }
 
 void setup() {
-    Serial.begin(115200);
+    // Uncomment following line for debugging
+    // Serial.begin(115200);
 
     // Configure button pins
     pinMode(BUTTON_1_PIN, INPUT_PULLUP);
@@ -114,14 +117,14 @@ void setup() {
 }
 
 void loop() {
-    static bool lastButtonStates[NUM_LEDS] = {0, 0, 0, 0}; // Previous button states
+    static bool lastButtonStates[NUM_BUTTONS] = {0, 0, 0, 0}; // Previous button states
     static unsigned long lastPeriodicTime = 0;
 
-    bool currentStates[NUM_LEDS];
+    bool currentStates[NUM_BUTTONS];
     readButtonStates(currentStates);
 
     // Send button state change events
-    for (int i = 0; i < NUM_LEDS; i++) {
+    for (int i = 0; i < NUM_BUTTONS; i++) {
         if (currentStates[i] != lastButtonStates[i]) { // Detect state change
             sendButtonEvent(i, currentStates[i]);
             lastButtonStates[i] = currentStates[i]; // Update the last state
@@ -136,6 +139,8 @@ void loop() {
 
     // Update LEDs based on current button states
     updateLEDs(currentStates);
+    
 
-    delay(10); // Small delay to debounce and prevent busy loop
+    delay(50); // Small delay to debounce and prevent busy loop
 }
+
