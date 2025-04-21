@@ -57,11 +57,8 @@ void CAN1_readMsg()
     }
     Serial.println();
 
-    // Modify data (add 1 to each byte)
-    for (int i = 0; i < message.data_length_code; i++)
-    {
-      message.data[i] += 1;
-    }
+    // Here you can modify the data before it is sent to CAN2
+
 
     // Send modified message to CAN2
     sendDataCAN2(message.data, message.data_length_code, message.identifier);
@@ -71,7 +68,7 @@ void CAN1_readMsg()
 bool setupCAN1(void)
 {
   twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)CAN1_TX_PIN, (gpio_num_t)CAN1_RX_PIN, TWAI_MODE_NORMAL);
-  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();   // CAN1 at 500 kbps
+  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();   // CAN1 at 500 kbps
   twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL(); // Accept all messages
 
   if (twai_driver_install(&g_config, &t_config, &f_config) != ESP_OK)
@@ -94,7 +91,7 @@ bool setupCAN2()
 {
   CAN2_SPI.begin(CAN2_SPI_SCK, CAN2_SPI_MISO, CAN2_SPI_MOSI, CAN2_CS_PIN);
 
-  if (CAN2.begin(MCP_STDEXT, CAN_500KBPS, MCP_16MHZ) == CAN_OK)
+  if (CAN2.begin(MCP_STDEXT, CAN_1000KBPS, MCP_16MHZ) == CAN_OK)
   {
     CAN2.setMode(MCP_NORMAL);
     return true;
@@ -110,8 +107,7 @@ void setup()
   Serial.begin(115200);
   while (!Serial)
     ;
-  delay(5000);
-  // Setup CAN1 (TWAI) at 500kbps
+  // Setup CAN1 (TWAI)
   Serial.println("Initializing CAN1...");
   if (!setupCAN1())
   {
@@ -120,7 +116,7 @@ void setup()
       ;
   }
 
-  // Setup CAN2 (MCP2515) at 500kbps
+  // Setup CAN2 (MCP2515)
   Serial.println("Initializing CAN2...");
   if (!setupCAN2())
   {
@@ -133,5 +129,4 @@ void setup()
 void loop()
 {
   CAN1_readMsg(); // Read from CAN1 and forward to CAN2 with data modification
-  delay(100);     // Small delay to avoid overwhelming the bus
 }
