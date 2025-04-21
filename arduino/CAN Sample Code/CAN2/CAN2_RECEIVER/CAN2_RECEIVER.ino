@@ -22,20 +22,7 @@ bool setupCAN2()
   }
 }
 
-void setup()
-{
-  Serial.begin(115200);
-  while (!Serial);
-
-  if (!setupCAN2()) {
-    Serial.println("Failed to initialize CAN2. Check connections.");
-    while (1);
-  } else {
-    Serial.println("MCP2515 Initialized Successfully (Receiver)");
-  }
-}
-
-void loop()
+void CAN2_readMsg()
 {
   if (CAN2.checkReceive() == CAN_MSGAVAIL) {
     long unsigned int canId;
@@ -51,4 +38,30 @@ void loop()
     }
     Serial.println();
   }
+}
+
+void setup()
+{
+  Serial.begin(115200);
+  while (!Serial);
+
+  if (!setupCAN2()) {
+    Serial.println("Failed to initialize CAN2. Check connections.");
+    while (1);
+  } else {
+    Serial.println("MCP2515 Initialized Successfully (Receiver)");
+  }
+}
+
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Continuously checks and reads available CAN messages.
+ * This function is repeatedly called in the main loop to
+ * process incoming CAN messages using the CAN2_readMsg function.
+ */
+
+/*******  271f6926-11a5-4a85-a008-3d620d11e8d8  *******/
+void loop()
+{
+  CAN2_readMsg();  // Read CAN messages
 }

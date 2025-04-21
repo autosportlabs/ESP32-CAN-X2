@@ -24,7 +24,7 @@ void CAN1_readMsg()
 bool setupCAN1(void)
 {
   twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)CAN1_TX_PIN, (gpio_num_t)CAN1_RX_PIN, TWAI_MODE_NORMAL);         // TWAI general configuration
-  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();            // TWAI timing configuration (250 kbps @ 80 MHz APB clock)
+  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();            // TWAI timing configuration (500 kbps @ 80 MHz APB clock)
   twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();          // TWAI filter config - accept all
 
   if (twai_driver_install(&g_config, &t_config, &f_config) != ESP_OK)       // Install TWAI driver
@@ -58,5 +58,4 @@ void setup()
 void loop()
 {
   CAN1_readMsg(); // read CAN1 message
-  delay(100); // wait for a second
 }
