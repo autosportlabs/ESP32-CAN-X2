@@ -73,7 +73,7 @@ TinyGPSPlus gps;
 #define CAN1_TX 7  // Adjust based on your setup
 #define CAN1_RX 6  // Adjust based on your setup
 
-// Desired update rate in Hz (1,2,4,5,8,10,…)
+// Desired update rate in Hz (1,5, 10, 25, 50)
 static const uint8_t updateRateHz = 10;
 
 // Baud-rate code for 115200 is 5

@@ -33,19 +33,15 @@
 // Initialize TinyGPS++
 TinyGPSPlus gps;
 
-// GPIO pin for level sensor
-#define GPIO_SENSOR 47
-
 // CAN1 IDs for broadcasting GPS data
 #define CAN_ID_LAT_LNG 100
 #define CAN_ID_SPEED_QUALITY 101
-#define CAN_ID_COUNTER 102
 
 // Define CAN1 TX and RX pins
 #define CAN1_TX 7  // Adjust based on your setup
 #define CAN1_RX 6  // Adjust based on your setup
 
-// Desired update rate in Hz (1,2,4,5,8,10,…)
+// Desired update rate in Hz (1,5, 10, 25, 50)
 static const uint8_t updateRateHz = 10;
 
 // Baud-rate code for 115200 is 5
