@@ -1,7 +1,32 @@
 /*
-  This code is for an ESP32-CAN-X2 microcontroller to read GPS data from a GPS module and transmit it over a CAN bus network.
-  - **TinyGPSPlus**: A library by Mikal Hart used to parse and decode NMEA sentences from GPS modules, providing easy access to location data such as latitude, longitude, speed, and quality indicators.
-  The code initializes a hardware serial connection for the GPS module and a CAN bus interface for broadcasting the parsed GPS data.
+  Project to combine GPS CAN bus broadcast with the GPS-bolt-on and also integrate a simple sensor reading using a GPIO. 
+
+  System is powered by 12v DC, which is connected to the board with a 3 pin cable:
+  * 12v
+  * ground
+  * sensor connection
+
+  Sensor is connected to a digital switch that is powered by 12v. When the switch is activated, the switch output is connected to ground.
+  It is assumed that when the switch output is not activated, there is a pullup to 12v. Therefore, the ESP32's GPIO input must be protected.
+  
+  Input circuit protection diagram:
+
+      Sensor output ──[12 V pull-up]───┐
+                                       │
+                                      ┌┴┐
+                                      │R│ 4.7K 1/4 W current limiting resistor
+                                      └┬┘
+                                       │
+                                       +──► ESP32 GPIO 47
+                                       │
+                                      ┌┴┐
+                                      --- cathode (band)
+                                      | |
+                                      │Z│ 1N4728A (3.3 V zener) to GND
+                                      └┬┘
+                                       │
+                                      GND
+  
 
   **GPS bolt-on Pin Configurations**
     - Rx to GPS module (tx from ESP32) - pin 17 of SV1 - GPIO40 of ESP32
@@ -23,6 +48,9 @@
     - GPS Satellite count. 1 byte payload, offset 3
     - GPSDOP (dilution of precision). 2 byte payload, offset 4 (Multiply by 100 to get 2 digits of precision, pack into two bytes)
 
+    ** CAN ID 102**
+    - A counter to indicate the main program loop is basically alive (byte 0)
+    - A sensor reading that sends 1 if the sensor output is activated (connected to ground) (byte 1)
 */
 
 #include <Arduino.h>
@@ -50,6 +78,11 @@ static const uint8_t updateRateHz = 10;
 
 // Baud-rate code for 115200 is 5
 static const uint8_t baudCode115k = 5;
+
+// A counter that will be broadcast to prove
+// the system is alive
+static uint8_t counter = 0;
+static uint32_t last_counter_increment_time = 0;
 
 // manages how often we send GPS broadcasts
 // In your globals
@@ -107,6 +140,9 @@ void configureSkytraqUpdateRate(uint8_t rateHz) {
 void setup() {
   Serial.begin(115200);    // Initialize serial communication with the Serial Monitor
 
+  // Setup level sensor GPIO
+  pinMode(GPIO_SENSOR, INPUT_PULLUP);
+
   // Setup GPS
   Serial2.begin(9600, SERIAL_8N1, 41, 40); // Initialize serial communication with the GPS module using hardware Serial2
   configureSkytraqBaudRate(baudCode115k);
@@ -134,6 +170,30 @@ void setup() {
   } else {
     Serial.println("Failed to start CAN1");
     return;
+  }
+}
+
+void check_send_sensor() {
+  if (millis() - last_counter_increment_time < 1000) {
+    return;
+  }
+
+  counter++;
+  last_counter_increment_time = millis();
+
+  uint8_t is_activated = digitalRead(GPIO_SENSOR) == 0;
+
+  twai_message_t message_counter;
+  
+  message_counter.identifier = CAN_ID_COUNTER;
+  message_counter.extd = 0;                           // Standard Frame
+  message_counter.rtr = 0;                            // Data Frame
+  message_counter.data_length_code = 2;               // 1-byte payload
+  message_counter.data[0] = counter;                  // set first byte to the counter
+  message_counter.data[1] = is_activated;             // set the sensor value is activated
+
+  if (twai_transmit(&message_counter, pdMS_TO_TICKS(1000)) == ESP_OK) {
+    Serial.println("CAN1: tx counter/sensor");
   }
 }
 
@@ -210,5 +270,6 @@ void check_send_gps() {
 }
 
 void loop() {
+  check_send_sensor();
   check_send_gps();
 }
