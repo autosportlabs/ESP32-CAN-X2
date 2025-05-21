@@ -30,12 +30,20 @@
 #include <TinyGPS++.h>
 
 // Change to give device custom name that displays during GPS search
-String deviceName = "DIY GPS";
+String deviceName = "ASL ESP32 + GPS";
 
 // Change to whatever you'd like, good generator here: https://www.uuidgenerator.net 
 // UUIDs are required 
 #define SERVICE_UUID        "ECBB8159-FBA9-4123-AEF0-CA06E1D390D9"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+
+// GPS Settings 
+
+// Desired update rate in Hz (1,5, 10, 25, 50)
+static const uint8_t updateRateHz = 10;
+// Baud-rate code for 115200 is 5
+static const uint8_t baudCode115k = 5;
+
 
 BLEServer *pServer = NULL;
 BLECharacteristic *pCharacteristic = NULL;
@@ -98,6 +106,55 @@ union centBytes {
   uint8_t bytes[1];
 } centUnion; 
 
+void configureSkytraqUpdateRate(uint8_t rateHz) {
+  // Payload bytes: { MsgID=0x0E, Rate, Attributes=0 }
+  const uint8_t payloadLen = 3;
+  uint8_t payload[payloadLen] = { 0x0E, rateHz, 0x00 };
+
+  // XOR‐checksum over the payload bytes
+  uint8_t checksum = 0;
+  for (uint8_t i = 0; i < payloadLen; i++) {
+    checksum ^= payload[i];
+  }
+
+  // Build the full packet:
+  //  A0 A1 00 03 [payload…] [checksum] 0D 0A
+  uint8_t pkt[2 + 2 + payloadLen + 1 + 2] = {
+    0xA0, 0xA1,             // header
+    0x00, payloadLen,       // payload length MSB=0, LSB=3
+    payload[0], payload[1], payload[2], // payload
+    checksum,               // XOR of payload[]
+    0x0D, 0x0A              // terminator
+  };
+
+  Serial2.write(pkt, sizeof(pkt));
+}
+
+
+void configureSkytraqBaudRate(uint8_t baudCode) {
+  // Payload bytes: { MsgID=0x05, COM_port=0, BaudCode, Attributes=0 }
+  const uint8_t payloadLen = 4;
+  uint8_t payload[payloadLen] = { 0x05, 0x00, baudCode, 0x00 };
+
+  // XOR-checksum over the payload bytes
+  uint8_t checksum = 0;
+  for (uint8_t i = 0; i < payloadLen; i++) {
+    checksum ^= payload[i];
+  }
+
+  // Build the full packet:
+  //  A0 A1 00 04 [payload…] [checksum] 0D 0A
+  uint8_t pkt[2 + 2 + payloadLen + 1 + 2] = {
+    0xA0, 0xA1,             // header
+    0x00, payloadLen,       // payload length MSB=0, LSB=4
+    payload[0], payload[1], payload[2], payload[3], // payload
+    checksum,               // XOR of payload[]
+    0x0D, 0x0A              // terminator
+  };
+
+  Serial2.write(pkt, sizeof(pkt));
+}
+
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
     deviceConnected = true;
@@ -111,11 +168,17 @@ class MyServerCallbacks : public BLEServerCallbacks {
 
 void setup() {
   Serial.begin(9600);
+
   // start reading from the gps module
   Serial2.begin(9600, SERIAL_8N1, 41, 40); // Initialize serial communication with the GPS module
   // Note: Replace 41 and 40 with actual RX and TX pins if required by your hardware.
+  configureSkytraqBaudRate(baudCode115k);
+  // give module a moment to switch
+  delay(1000);
+  Serial2.begin(115200);    
+  configureSkytraqUpdateRate(updateRateHz);
+  Serial.println("GPS Module Initialized");
 
-  Serial.println("GPS Started!");
 
   BLEDevice::init(deviceName);
 
