@@ -1,3 +1,58 @@
+/**
+ * ESP32 LoRa Receiver with Interrupt-Driven Operation
+ * 
+ * Description:
+ * Advanced LoRa packet receiver using interrupt-based reception for efficient operation.
+ * Implements callback-driven architecture to minimize CPU usage while waiting for packets.
+ * 
+ * Key Features:
+ * - Interrupt-based packet reception (no polling)
+ * - Visual feedback via RX LED
+ * - Detailed packet diagnostics (RSSI)
+ * - Custom HSPI interface configuration
+ * - Efficient power management through interrupt handling
+ * 
+ * Hardware Configuration:
+ * LoRa Module Connections:
+ *   - MOSI: GPIO15
+ *   - MISO: GPIO16
+ *   - SCK:  GPIO17
+ *   - NSS:  GPIO18 (CS)
+ *   - RST:  GPIO5
+ *   - INT:  GPIO4 (DIO0 - interrupt pin)
+ * 
+ * LED Indicators:
+ *   - RX LED: GPIO8 (active-low blink on reception)
+ *   - TX LED: GPIO9 (reserved for future transmit functionality)
+ * 
+ * Radio Settings:
+ *   - Frequency: 433MHz
+ *   - SPI Interface: HSPI
+ *   - Interrupt-driven receive mode
+ * 
+ * Functionality:
+ * 1. Initializes hardware peripherals (Serial, LEDs, LoRa)
+ * 2. Configures LoRa module in receive mode with callback
+ * 3. Processes incoming packets via interrupt service routine
+ * 4. Provides visual and serial output for received packets
+ * 
+ * Usage:
+ * 1. Connect hardware as per pin definitions
+ * 2. Upload sketch to ESP32
+ * 3. Monitor serial output at 115200 baud
+ * 4. RX LED will blink on packet reception
+ * 
+ * Advanced Features:
+ * - Interrupt-driven architecture reduces CPU load
+ * - Callback handler for immediate packet processing
+ * - Packet size tracking for efficient reading
+ * - Ready for expansion to transmit functionality
+ * 
+ * Dependencies:
+ * - LoRa library (included in repository)
+ * - SPI library (built-in)
+ */
+
 #include <SPI.h> // include libraries
 #include <LoRa.h>
 
