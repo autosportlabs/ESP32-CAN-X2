@@ -1,3 +1,47 @@
+/*
+ * CAN Bus Dual-Interface Test Program for ESP32
+ *
+ * Description:
+ * Demonstrates communication between two CAN interfaces:
+ *   1. CAN1 - ESP32's native TWAI controller (transmitter)
+ *   2. CAN2 - External MCP2515 module (receiver)
+ *
+ * Functionality:
+ * - Periodically transmits test messages via CAN1 (every 1 second)
+ * - Listens for incoming messages on CAN2
+ * - Prints all transactions to Serial monitor
+ *
+ * Hardware Configuration:
+ * CAN1 (TWAI - Transmitter):
+ *   - TX: GPIO7
+ *   - RX: GPIO6
+ *   - Speed: 500kbps
+ * 
+ * CAN2 (MCP2515 - Receiver):
+ *   - SPI Bus: HSPI
+ *   - SCK:  GPIO12
+ *   - MISO: GPIO13
+ *   - MOSI: GPIO11
+ *   - CS:   GPIO10
+ *   - Speed: 1Mbps
+ *   - Crystal: 16MHz
+ *
+ * Message Details:
+ * - Test message ID: 0x123
+ * - Test data: 0x01, 0x02, 0x03, 0x04, 0x05, 0x06
+ * - Sent every 1000ms
+ *
+ * Libraries Required:
+ * - driver/twai.h (ESP32 native)
+ * - MCP_CAN_lib (https://github.com/coryjfowler/MCP_CAN_lib)
+ * - SPI.h (Arduino/ESP32)
+ *
+ * Usage:
+ * 1. Connect CAN1 and CAN2 buses properly
+ * 2. Monitor serial output at 115200 baud
+ * 3. Messages sent on CAN1 should appear on CAN2 if properly connected
+ */
+
 #include <driver/twai.h>
 #include <mcp_can.h>    // ADD library https://github.com/coryjfowler/MCP_CAN_lib
 #include <SPI.h>

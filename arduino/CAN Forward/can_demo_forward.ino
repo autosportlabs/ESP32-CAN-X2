@@ -1,3 +1,43 @@
+/*
+ * CAN Bus Bridge between ESP32 TWAI (CAN1) and MCP2515 (CAN2)
+ *
+ * Description:
+ * This code creates a bidirectional bridge between two CAN interfaces:
+ *   1. CAN1 - ESP32's native TWAI controller (CAN protocol)
+ *   2. CAN2 - External MCP2515 module connected via SPI
+ *
+ * Functionality:
+ * - Monitors CAN1 bus for incoming messages
+ * - Forwards all received CAN1 messages to CAN2
+ * - Prints all transactions to Serial monitor for debugging
+ * - Handles basic error detection and reporting
+ *
+ * Hardware Configuration:
+ * CAN1 (TWAI):
+ *   - RX: GPIO6
+ *   - TX: GPIO7
+ *   - Speed: 500kbps
+ * 
+ * CAN2 (MCP2515):
+ *   - SPI Bus: HSPI
+ *   - SCK: GPIO12
+ *   - MISO: GPIO13
+ *   - MOSI: GPIO11
+ *   - CS: GPIO10
+ *   - Speed: 1Mbps
+ *   - Crystal: 16MHz
+ *
+ * Libraries Required:
+ * - driver/twai.h (ESP32 native)
+ * - MCP_CAN_lib (https://github.com/coryjfowler/MCP_CAN_lib)
+ * - SPI.h (Arduino/ESP32)
+ *
+ * Notes:
+ * - Currently forwards messages unmodified
+ * - Add message filtering/modification in CAN1_readMsg() if needed
+ * - Serial monitor runs at 115200 baud
+ */
+
 #include <driver/twai.h>
 #include <mcp_can.h>    // ADD library https://github.com/coryjfowler/MCP_CAN_lib
 #include <SPI.h>
