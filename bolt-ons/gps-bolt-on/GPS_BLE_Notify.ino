@@ -1,3 +1,5 @@
+#include <TinyGPSPlus.h>
+
 /*
   Heavily based on the example BLE notify code provided with ESP32 on Arduino IDE. 
   Great video that goes over BLE concepts with ESP32: https://youtu.be/0Yvd_k0hbVs?si=qxlBrfBaO1deO5Bh 
@@ -26,7 +28,6 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include <BLE2901.h>
-#include <HardwareSerial.h>
 #include <TinyGPS++.h>
 
 // Change to give device custom name that displays during GPS search
@@ -127,7 +128,7 @@ void configureSkytraqUpdateRate(uint8_t rateHz) {
     0x0D, 0x0A              // terminator
   };
 
-  Serial2.write(pkt, sizeof(pkt));
+  Serial1.write(pkt, sizeof(pkt));
 }
 
 
@@ -152,7 +153,7 @@ void configureSkytraqBaudRate(uint8_t baudCode) {
     0x0D, 0x0A              // terminator
   };
 
-  Serial2.write(pkt, sizeof(pkt));
+  Serial1.write(pkt, sizeof(pkt));
 }
 
 class MyServerCallbacks : public BLEServerCallbacks {
@@ -170,12 +171,12 @@ void setup() {
   Serial.begin(9600);
 
   // start reading from the gps module
-  Serial2.begin(9600, SERIAL_8N1, 41, 40); // Initialize serial communication with the GPS module
+  Serial1.begin(9600, SERIAL_8N1, 41, 40); // Initialize serial communication with the GPS module
   // Note: Replace 41 and 40 with actual RX and TX pins if required by your hardware.
   configureSkytraqBaudRate(baudCode115k);
   // give module a moment to switch
   delay(1000);
-  Serial2.begin(115200);    
+  Serial1.begin(115200);    
   configureSkytraqUpdateRate(updateRateHz);
   Serial.println("GPS Module Initialized");
 
@@ -218,8 +219,8 @@ void setup() {
 
 
 void loop() {
-  while (Serial2.available()) {
-      gps.encode(Serial2.read());
+  while (Serial1.available()) {
+      gps.encode(Serial1.read());
   }
 
   if (deviceConnected && gps.location.isUpdated()) {
