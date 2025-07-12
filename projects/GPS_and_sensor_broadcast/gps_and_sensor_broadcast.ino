@@ -22,7 +22,7 @@
                                       ┌┴┐
                                       --- cathode (band)
                                       | |
-                                      │Z│ 1N4728A (3.3 V zener) to GND
+                                      │Z│ 1N4728A (3.6 V zener) to GND
                                       └┬┘
                                        │
                                       GND
