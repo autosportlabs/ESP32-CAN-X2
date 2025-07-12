@@ -16,7 +16,7 @@
  * CAN1 (TWAI):
  *   - RX: GPIO6
  *   - TX: GPIO7
- *   - Speed: 500kbps
+ *   - Speed: 250kbps
  * 
  * CAN2 (MCP2515):
  *   - SPI Bus: HSPI
@@ -55,7 +55,9 @@
 SPIClass CAN2_SPI(HSPI); // HSPI bus
 MCP_CAN CAN2(&CAN2_SPI, CAN2_CS_PIN);
 
-void sendDataCAN2(byte *data, unsigned long data_len, unsigned long can_id)
+byte led_state = LOW;
+
+bool sendDataCAN2(byte *data, unsigned long data_len, unsigned long can_id)
 {
 
   Serial.printf("Sending message to CAN2 [0x%03lX]: ", can_id);
@@ -73,11 +75,12 @@ void sendDataCAN2(byte *data, unsigned long data_len, unsigned long can_id)
   if (result == CAN_OK)
   {
     Serial.println("Message sent successfully via CAN2");
+    return true;
   }
   else
   {
-    Serial.print("Message send failed, code: ");
-    Serial.println(result);
+    Serial.printf("Message send failed, code: %d\n", result);
+    return false;
   }
 }
 
@@ -99,16 +102,18 @@ void CAN1_readMsg()
 
     // Here you can modify the data before it is sent to CAN2
 
-
     // Send modified message to CAN2
-    sendDataCAN2(message.data, message.data_length_code, message.identifier);
+    if (sendDataCAN2(message.data, message.data_length_code, message.identifier)) {
+        digitalWrite(LED_BUILTIN, led_state);
+        led_state = led_state ? LOW : HIGH;
+    }
   }
 }
 
 bool setupCAN1(void)
 {
   twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)CAN1_TX_PIN, (gpio_num_t)CAN1_RX_PIN, TWAI_MODE_NORMAL);
-  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();   // CAN1 at 500 kbps
+  twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();   // CAN1 at 250 kbps
   twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL(); // Accept all messages
 
   if (twai_driver_install(&g_config, &t_config, &f_config) != ESP_OK)
@@ -147,6 +152,10 @@ void setup()
   Serial.begin(115200);
   while (!Serial)
     ;
+
+  //configure LED
+  pinMode(LED_BUILTIN, OUTPUT);
+
   // Setup CAN1 (TWAI)
   Serial.println("Initializing CAN1...");
   if (!setupCAN1())
