@@ -73,8 +73,6 @@ void sendDataCAN2(byte *data, unsigned long data_len, unsigned long can_id)
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial)
-    ;
 
   // Initialize SPI with custom pins
   if (!setupCAN2())

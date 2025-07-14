@@ -65,7 +65,6 @@ void CAN2_readMsg()
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial);
 
   if (!setupCAN2()) {
     Serial.println("Failed to initialize CAN2. Check connections.");

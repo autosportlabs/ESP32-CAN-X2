@@ -9,7 +9,6 @@
  * 
  * Hardware Connections:
  * - RX: GPIO6, TX: GPIO7
- * - Requires external CAN transceiver
  * 
  * Usage:
  * - Connect to CAN bus with proper termination

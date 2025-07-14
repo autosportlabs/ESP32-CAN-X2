@@ -32,7 +32,6 @@ MCP_CAN CAN2(&CAN2_SPI, CAN2_CS_PIN);
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial);
   delay(5000); // Give time for the Serial Monitor to open
   CAN2_SPI.begin(CAN2_SPI_SCK, CAN2_SPI_MISO, CAN2_SPI_MOSI, CAN2_CS_PIN);
 
