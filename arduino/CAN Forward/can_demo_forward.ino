@@ -57,10 +57,11 @@ MCP_CAN CAN2(&CAN2_SPI, CAN2_CS_PIN);
 
 byte led_state = LOW;
 
-bool sendDataCAN2(byte *data, unsigned long data_len, unsigned long can_id)
+bool sendDataCAN2(byte *data, unsigned long data_len, unsigned long can_id, byte extFlag)
 {
 
-  Serial.printf("Sending message to CAN2 [0x%03lX]: ", can_id);
+  // Serial.printf("Sending message to CAN2 [0x%03lX]: ", can_id);
+  Serial.printf("Sending message to CAN2 [0x%08lX %s]: ", can_id, extFlag ? "EXT" : "STD");   // Print the Identifier and whether it is EXT or STD.
   for (byte i = 0; i < data_len; i++)
   {
     Serial.printf("0x%02X", data[i]);
@@ -70,7 +71,7 @@ bool sendDataCAN2(byte *data, unsigned long data_len, unsigned long can_id)
   Serial.println();
 
   // Send the message via CAN2
-  byte result = CAN2.sendMsgBuf(can_id, 0, data_len, data);
+  byte result = CAN2.sendMsgBuf(can_id, extFlag, data_len, data);
 
   if (result == CAN_OK)
   {
@@ -91,7 +92,8 @@ void CAN1_readMsg()
   while (twai_receive(&message, 0) == ESP_OK) // Non-blocking
   {
     // Print original CAN1 message
-    Serial.printf("[CAN1 0x%X]: ", message.identifier);
+    // Serial.printf("[CAN1 0x%X]: ", message.identifier);
+    Serial.printf("[CAN1 0x%X %s]: ", message.identifier, message.extd ? "EXT" : "STD");  //  To check if the frame is STD or EXT alongwith the Identifier.
     for (int i = 0; i < message.data_length_code; i++)
     {
       Serial.printf("0x%02X", message.data[i]);
@@ -103,7 +105,7 @@ void CAN1_readMsg()
     // Here you can modify the data before it is sent to CAN2
 
     // Send modified message to CAN2
-    if (sendDataCAN2(message.data, message.data_length_code, message.identifier)) {
+    if (sendDataCAN2(message.data, message.data_length_code, message.identifier, message.extd)) {
         digitalWrite(LED_BUILTIN, led_state);
         led_state = led_state ? LOW : HIGH;
     }
@@ -150,8 +152,8 @@ bool setupCAN2()
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial)
-    ;
+  // while (!Serial)
+  //   ;
 
   //configure LED
   pinMode(LED_BUILTIN, OUTPUT);
