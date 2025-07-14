@@ -1,3 +1,25 @@
+/*
+ * ESP32 MCP2515 CAN Bus Receiver
+ * 
+ * Implements a CAN bus receiver using MCP2515 controller with:
+ * - Custom SPI pin configuration
+ * - 500kbps baud rate (16MHz crystal)
+ * - Standard and extended frame support
+ * - Non-blocking message reception
+ * - Formatted message output to Serial
+ * 
+ * Hardware Configuration:
+ * - SPI Interface:
+ *   - SCK:  GPIO12
+ *   - MISO: GPIO13  
+ *   - MOSI: GPIO11
+ *   - CS:   GPIO10
+ * - Uses MCP2515 CAN controller module
+ * 
+ * Dependencies:
+ * - MCP_CAN library (https://github.com/coryjfowler/MCP_CAN_lib)
+ */
+
 #include <mcp_can.h>    // ADD library https://github.com/coryjfowler/MCP_CAN_lib
 #include <SPI.h>
 
@@ -53,14 +75,12 @@ void setup()
   }
 }
 
-/*************  ✨ Windsurf Command ⭐  *************/
 /**
  * Continuously checks and reads available CAN messages.
  * This function is repeatedly called in the main loop to
  * process incoming CAN messages using the CAN2_readMsg function.
  */
 
-/*******  271f6926-11a5-4a85-a008-3d620d11e8d8  *******/
 void loop()
 {
   CAN2_readMsg();  // Read CAN messages

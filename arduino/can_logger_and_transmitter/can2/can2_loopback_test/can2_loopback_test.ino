@@ -1,3 +1,23 @@
+/*
+ * ESP32 MCP2515 CAN Bus Example (Loopback Mode)
+ * 
+ * Functionality:
+ * - Initializes MCP2515 at 500kbps (16MHz crystal)
+ * - Demonstrates loopback mode operation
+ * - Sends test messages with ID 0x123
+ * - Receives and prints looped-back messages
+ * - Includes error checking for all operations
+ * 
+ * Hardware Connections:
+ * - SPI: SCK=GPIO12, MISO=GPIO13, MOSI=GPIO11, CS: GPIO10
+ * - Requires MCP2515 CAN controller module
+ * 
+ * Usage:
+ * - Set to loopback mode for testing
+ * - Monitor serial output at 115200 baud
+ * - Change to normal mode for actual CAN bus communication
+ */
+
 #include <mcp_can.h>    // ADD library https://github.com/coryjfowler/MCP_CAN_lib
 #include <SPI.h>
 

@@ -1,3 +1,21 @@
+/*
+ * ESP32 TWAI/CAN Receiver Example
+ * 
+ * Functionality:
+ * - Initializes CAN controller at 500kbps
+ * - Receives standard CAN frames (11-bit IDs)
+ * - Prints all received messages to serial monitor
+ * - Non-blocking message reception
+ * 
+ * Hardware Connections:
+ * - RX: GPIO6, TX: GPIO7
+ * - Requires external CAN transceiver
+ * 
+ * Usage:
+ * - Connect to CAN bus with proper termination
+ * - Monitor received messages at 115200 baud
+ */
+
 #include <driver/twai.h>
 
 #define CAN1_RX_PIN GPIO_NUM_6

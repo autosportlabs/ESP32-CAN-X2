@@ -1,4 +1,32 @@
-#include <mcp_can.h>            // ADD library https://github.com/coryjfowler/MCP_CAN_lib
+/*
+ * ESP32 MCP2515 CAN Bus Transmitter
+ * 
+ * Implements a CAN bus transmitter using MCP2515 controller with:
+ * - Custom SPI pin configuration (HSPI bus)
+ * - 500kbps baud rate (16MHz crystal)
+ * - Support for standard CAN frames (11-bit IDs)
+ * - Configurable message ID and payload
+ * - Transmission status feedback
+ * 
+ * Hardware Configuration:
+ * - SPI Interface:
+ *   - SCK:  GPIO12
+ *   - MISO: GPIO13  
+ *   - MOSI: GPIO11
+ *   - CS:   GPIO10
+ * - Requires MCP2515 CAN controller module
+ * - 120Ω termination resistor recommended on CAN bus
+ * 
+ * Default Transmission:
+ * - Sends 8-byte test pattern every second
+ * - Default CAN ID: 0x123
+ * - Payload: 0x01 to 0x08
+ * 
+ * Dependencies:
+ * - MCP_CAN library (https://github.com/coryjfowler/MCP_CAN_lib)
+ */
+
+ #include <mcp_can.h>            // ADD library https://github.com/coryjfowler/MCP_CAN_lib
 #include <SPI.h>
 
 // Custom SPI Pins for MCP2515

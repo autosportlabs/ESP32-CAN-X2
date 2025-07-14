@@ -1,3 +1,22 @@
+/*
+ * ESP32 TWAI/CAN Transmitter Example
+ * 
+ * Functionality:
+ * - Initializes CAN controller at 500kbps
+ * - Transmits standard CAN frames with ID 0x123
+ * - Sends 8-byte payload (0x01-0x08) every second
+ * - Prints transmission details to serial monitor
+ * 
+ * Hardware Connections:
+ * - TX: GPIO7, RX: GPIO6
+ * - Requires external CAN transceiver
+ * 
+ * Usage:
+ * - Connect to CAN bus with proper termination
+ * - Monitor output at 115200 baud
+ */
+
+
 #include <driver/twai.h>
 
 #define CAN1_TX_PIN GPIO_NUM_7
