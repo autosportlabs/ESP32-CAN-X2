@@ -6,8 +6,8 @@
   * ground
   * sensor connection
 
-  Sensor is connected to a digital switch that is powered by 12v. When the switch is activated, the switch output is connected to ground.
-  It is assumed that when the switch output is not activated, there is a pullup to 12v. Therefore, the ESP32's GPIO input must be protected.
+  Sensor is connected to a digital switch that is powered by 12v. When the switch is activated, the switch output is connected to 12v.
+  When the switch output is not activated, there is a pulldown to ground. Therefore, with this design the ESP32's GPIO input must be protected.
   
   Input circuit protection diagram:
 
@@ -88,6 +88,8 @@ static uint32_t last_counter_increment_time = 0;
 // In your globals
 static uint32_t last_gps_broadcast = 0;
 const uint32_t gps_broadcast_interval = 1000 / updateRateHz;  // e.g. 100 ms
+static bool led_state = false;
+static bool can_init = false;
 
 void configureSkytraqBaudRate(uint8_t baudCode) {
   // Payload bytes: { MsgID=0x05, COM_port=0, BaudCode, Attributes=0 }
@@ -138,10 +140,12 @@ void configureSkytraqUpdateRate(uint8_t rateHz) {
 }
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT); //configure LED for being controlled
+
   Serial.begin(115200);    // Initialize serial communication with the Serial Monitor
 
   // Setup level sensor GPIO
-  pinMode(GPIO_SENSOR, INPUT_PULLUP);
+  pinMode(GPIO_SENSOR, INPUT_PULLDOWN);
 
   // Setup GPS
   Serial2.begin(9600, SERIAL_8N1, 41, 40); // Initialize serial communication with the GPS module using hardware Serial2
@@ -151,7 +155,9 @@ void setup() {
   Serial2.begin(115200);    
   configureSkytraqUpdateRate(updateRateHz);
   Serial.println("GPS Module Initialized");
+}
 
+bool init_CAN() {
   // CAN1 Initialization
   Serial.println("Initializing CAN1...");
   twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT((gpio_num_t)CAN1_TX, (gpio_num_t)CAN1_RX, TWAI_MODE_NORMAL);
@@ -162,15 +168,22 @@ void setup() {
     Serial.println("CAN1 Driver initialized");
   } else {
     Serial.println("Failed to initialize CAN1 driver");
-    return;
+    return false;
   }
 
   if (twai_start() == ESP_OK) {
     Serial.println("CAN1 interface started");
   } else {
     Serial.println("Failed to start CAN1");
-    return;
+    return false;
   }
+  Serial.println("CAN1 initialization complete!");
+  return true;
+}
+
+void toggle_led() {
+  led_state = !led_state;
+  digitalWrite(LED_BUILTIN, led_state);
 }
 
 void check_send_sensor() {
@@ -181,7 +194,7 @@ void check_send_sensor() {
   counter++;
   last_counter_increment_time = millis();
 
-  uint8_t is_activated = digitalRead(GPIO_SENSOR) == 0;
+  uint8_t is_activated = digitalRead(GPIO_SENSOR) == 1;
 
   twai_message_t message_counter;
   
@@ -194,7 +207,9 @@ void check_send_sensor() {
 
   if (twai_transmit(&message_counter, pdMS_TO_TICKS(1000)) == ESP_OK) {
     Serial.println("CAN1: tx counter/sensor");
+    toggle_led();
   }
+
 }
 
 void broadcast_gps() {
@@ -251,6 +266,10 @@ void broadcast_gps() {
   } else {
     Serial.println("CAN1: Failed to send Speed and GPS quality data");
   }
+
+  if (gps_quality) {
+    toggle_led();
+  }
 }
 
 void check_send_gps() {
@@ -270,6 +289,12 @@ void check_send_gps() {
 }
 
 void loop() {
+  if (! can_init) {
+    can_init = init_CAN();
+    if (!can_init) {
+      return;
+    }
+  }
   check_send_sensor();
   check_send_gps();
 }
