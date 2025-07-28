@@ -181,6 +181,11 @@ bool init_CAN() {
   return true;
 }
 
+void toggle_led() {
+  led_state = !led_state;
+  digitalWrite(LED_BUILTIN, led_state);
+}
+
 void check_send_sensor() {
   if (millis() - last_counter_increment_time < 1000) {
     return;
@@ -202,8 +207,7 @@ void check_send_sensor() {
 
   if (twai_transmit(&message_counter, pdMS_TO_TICKS(1000)) == ESP_OK) {
     Serial.println("CAN1: tx counter/sensor");
-    led_state = !led_state;
-    digitalWrite(LED_BUILTIN, led_state);
+    toggle_led();
   }
 
 }
@@ -261,6 +265,10 @@ void broadcast_gps() {
     Serial.println("CAN1: tx speed/qual");
   } else {
     Serial.println("CAN1: Failed to send Speed and GPS quality data");
+  }
+
+  if (gps_quality) {
+    toggle_led();
   }
 }
 
