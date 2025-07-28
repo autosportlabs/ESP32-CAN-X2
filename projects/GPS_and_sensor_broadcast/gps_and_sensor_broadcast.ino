@@ -6,8 +6,8 @@
   * ground
   * sensor connection
 
-  Sensor is connected to a digital switch that is powered by 12v. When the switch is activated, the switch output is connected to ground.
-  It is assumed that when the switch output is not activated, there is a pullup to 12v. Therefore, the ESP32's GPIO input must be protected.
+  Sensor is connected to a digital switch that is powered by 12v. When the switch is activated, the switch output is connected to 12v.
+  When the switch output is not activated, there is a pulldown to ground. Therefore, with this design the ESP32's GPIO input must be protected.
   
   Input circuit protection diagram:
 
